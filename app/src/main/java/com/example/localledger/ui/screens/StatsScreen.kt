@@ -7,8 +7,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import com.example.localledger.data.local.CategoryExpense
 import com.example.localledger.data.local.DayExpense
 
@@ -17,41 +15,27 @@ import com.example.localledger.data.local.DayExpense
 fun StatsScreen(
     expensesByCategory: List<CategoryExpense>,
     expensesByDay: List<DayExpense>,
-    onDismiss: () -> Unit
+    modifier: Modifier = Modifier
 ) {
     var selectedTab by remember { mutableStateOf(StatsTab.Category) }
 
-    Surface {
-        Column(modifier = Modifier.fillMaxSize()) {
-            TopAppBar(
-                title = { Text("统计") },
-                navigationIcon = {
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "返回"
-                        )
-                    }
-                }
-            )
-
-            TabRow(
-                selectedTabIndex = selectedTab.ordinal,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                StatsTab.entries.forEach { tab ->
-                    Tab(
-                        selected = selectedTab == tab,
-                        onClick = { selectedTab = tab },
-                        text = { Text(tab.title) }
-                    )
-                }
+    Column(modifier = modifier) {
+        TabRow(
+            selectedTabIndex = selectedTab.ordinal,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            StatsTab.entries.forEach { tab ->
+                Tab(
+                    selected = selectedTab == tab,
+                    onClick = { selectedTab = tab },
+                    text = { Text(tab.title) }
+                )
             }
+        }
 
-            when (selectedTab) {
-                StatsTab.Category -> CategoryChart(expensesByCategory)
-                StatsTab.Day -> DayChart(expensesByDay)
-            }
+        when (selectedTab) {
+            StatsTab.Category -> CategoryChart(expensesByCategory)
+            StatsTab.Day -> DayChart(expensesByDay)
         }
     }
 }
@@ -89,20 +73,21 @@ fun CategoryChart(data: List<CategoryExpense>) {
                     modifier = Modifier.weight(0.4f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                // ✅ 修正：使用 weight + fill 代替已弃用的 fill=false
                 Box(
                     modifier = Modifier
                         .weight(0.6f)
                         .height(24.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant) // 给进度条一个背景色
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     val fraction = (item.total.toDouble() / total).toFloat()
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(fraction)
-                            .fillMaxHeight()
-                            .background(MaterialTheme.colorScheme.primary)
-                    )
+                    if (fraction > 0) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(fraction)
+                                .fillMaxHeight()
+                                .background(MaterialTheme.colorScheme.primary)
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -133,9 +118,8 @@ fun DayChart(data: List<DayExpense>) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Bottom
             ) {
-                // ✅ 关键修复：处理 item.day 可能为 null
                 Text(
-                    text = item.day ?: "未知日期", // ← 安全访问
+                    text = item.day ?: "未知日期",
                     modifier = Modifier.width(60.dp),
                     style = MaterialTheme.typography.labelMedium
                 )

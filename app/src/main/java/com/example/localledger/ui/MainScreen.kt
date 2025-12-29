@@ -6,7 +6,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.localledger.data.model.TransactionEntity
@@ -27,13 +26,46 @@ fun MainScreen(viewModel: TransactionViewModel) {
 
     var showDeleteConfirm by remember { mutableStateOf<TransactionEntity?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("本地隐私记账簿") },
+                actions = {
+                    // ✅ 单击进入/退出统计页
+                    IconButton(onClick = {
+                        if (screenState is ScreenState.Stats) {
+                            viewModel.navigateTo(ScreenState.List)
+                        } else {
+                            viewModel.navigateTo(ScreenState.Stats)
+                        }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.BarChart,
+                            contentDescription = if (screenState is ScreenState.Stats) "返回账目" else "查看统计"
+                        )
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            if (screenState is ScreenState.List) {
+                FloatingActionButton(
+                    onClick = { viewModel.navigateTo(ScreenState.Add) },
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "添加账目")
+                }
+            }
+        }
+    ) { innerPadding ->
+
         when (val currentState = screenState) {
             ScreenState.List -> {
                 TransactionListScreen(
                     transactions = transactions,
                     onEdit = { viewModel.navigateTo(ScreenState.Edit(it)) },
-                    onDelete = { showDeleteConfirm = it }
+                    onDelete = { showDeleteConfirm = it },
+                    modifier = Modifier.padding(innerPadding)
                 )
             }
             ScreenState.Add -> {
@@ -55,30 +87,8 @@ fun MainScreen(viewModel: TransactionViewModel) {
                 StatsScreen(
                     expensesByCategory = expensesByCategory,
                     expensesByDay = expensesByDay,
-                    onDismiss = { viewModel.navigateTo(ScreenState.List) }
+                    modifier = Modifier.padding(innerPadding)
                 )
-            }
-        }
-
-        // 仅在列表页显示 FAB 和顶部操作
-        if (screenState is ScreenState.List) {
-            TopAppBar(
-                title = { Text("本地隐私记账簿") },
-                actions = {
-                    IconButton(onClick = { viewModel.navigateTo(ScreenState.Stats) }) {
-                        Icon(Icons.Default.BarChart, contentDescription = "统计")
-                    }
-                },
-                modifier = Modifier.align(Alignment.TopStart)
-            )
-
-            FloatingActionButton(
-                onClick = { viewModel.navigateTo(ScreenState.Add) },
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.BottomEnd)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "添加账目")
             }
         }
 
