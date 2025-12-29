@@ -1,5 +1,6 @@
 package com.example.localledger.ui.screens
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -10,7 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,9 +48,9 @@ fun TransactionListScreen(
         contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
     ) {
         items(transactions, key = { it.id }) { transaction ->
-            val dismissState = rememberDismissState(
+            val dismissState = rememberSwipeToDismissBoxState(
                 confirmValueChange = { dismissValue ->
-                    if (dismissValue == DismissValue.DismissedToStart) {
+                    if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
                         onDelete(transaction)
                         true
                     } else {
@@ -58,14 +59,17 @@ fun TransactionListScreen(
                 }
             )
 
-            SwipeToDismiss(
+            SwipeToDismissBox(
                 state = dismissState,
-                directions = setOf(DismissDirection.EndToStart),
-                background = {
-                    val color = when (dismissState.dismissDirection) {
-                        DismissDirection.EndToStart -> MaterialTheme.colorScheme.error
-                        else -> Color.Transparent
-                    }
+                enableDismissFromStartToEnd = false,
+                backgroundContent = {
+                    val color by animateColorAsState(
+                        targetValue = when (dismissState.targetValue) {
+                            SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.error
+                            else -> Color.Transparent
+                        },
+                        label = "backgroundColor"
+                    )
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -73,7 +77,7 @@ fun TransactionListScreen(
                             .padding(horizontal = 24.dp),
                         contentAlignment = Alignment.CenterEnd
                     ) {
-                        if (dismissState.dismissDirection == DismissDirection.EndToStart) {
+                        if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = "删除",
@@ -82,19 +86,18 @@ fun TransactionListScreen(
                             )
                         }
                     }
-                },
-                dismissContent = {
-                    TransactionItem(
-                        transaction = transaction,
-                        onLongClick = { onEdit(transaction) },
-                        modifier = Modifier
-                            .combinedClickable(
-                                onClick = { /* 无操作 */ },
-                                onLongClick = { onEdit(transaction) }
-                            )
-                    )
                 }
-            )
+            ) {
+                TransactionItem(
+                    transaction = transaction,
+                    onLongClick = { onEdit(transaction) },
+                    modifier = Modifier
+                        .combinedClickable(
+                            onClick = { /* 无操作 */ },
+                            onLongClick = { onEdit(transaction) }
+                        )
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
