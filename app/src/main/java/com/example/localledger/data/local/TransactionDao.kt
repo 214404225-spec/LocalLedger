@@ -1,4 +1,4 @@
-package com.example.localledger.data.local
+package com.example.localledger. data.local
 
 import androidx.room.*
 import com.example.localledger.data.model.TransactionEntity
@@ -10,7 +10,7 @@ interface TransactionDao {
     suspend fun getAllTransactions(): List<TransactionEntity>
 
     @Insert
-    suspend fun insertTransaction(transaction: TransactionEntity)
+    suspend fun insertTransaction(transaction:  TransactionEntity)
 
     @Update
     suspend fun updateTransaction(transaction: TransactionEntity)
@@ -28,26 +28,26 @@ interface TransactionDao {
     @Query("SELECT category, SUM(baseAmount) AS total FROM transactions GROUP BY category")
     suspend fun getExpensesByCategory(): List<CategoryExpense>
 
-    // ===== 按日统计（关键：添加 WHERE timestamp > 0）=====
+    // ===== 按日统计（修复：时间戳/1000 + 本地时区）=====
     @Query("""
         SELECT 
-            date(timestamp, 'unixepoch') AS day, 
+            date(timestamp / 1000, 'unixepoch', 'localtime') AS day,
             SUM(baseAmount) AS total 
         FROM transactions 
-        WHERE timestamp > 0  -- ← 防止 timestamp=0 产生 null 日期
+        WHERE timestamp > 0
         GROUP BY day 
         ORDER BY day DESC 
         LIMIT 30
     """)
     suspend fun getExpensesByDay(): List<DayExpense>
 
-    // ===== 按月统计（关键：添加 WHERE timestamp > 0）=====
+    // ===== 按月统计（修复：时间戳/1000 + 本地时区）=====
     @Query("""
         SELECT 
-            strftime('%Y-%m', timestamp, 'unixepoch') AS month, 
+            strftime('%Y-%m', timestamp / 1000, 'unixepoch', 'localtime') AS month,
             SUM(baseAmount) AS total 
         FROM transactions 
-        WHERE timestamp > 0  -- ← 防止 timestamp=0 产生 null 月份
+        WHERE timestamp > 0
         GROUP BY month 
         ORDER BY month DESC 
         LIMIT 12
