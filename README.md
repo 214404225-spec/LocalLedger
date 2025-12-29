@@ -1,4 +1,4 @@
-# **基于Android的本地记账的mini-APP**
+# **基于 Android 的本地记账 mini-APP**
 
 ## **核心价值**
 本项目旨在解决现有商业记账 App 的两大痛点：  
