@@ -1,22 +1,26 @@
 package com.example.localledger.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.localledger.data.model.TransactionEntity
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionListScreen(
     transactions: List<TransactionEntity>,
@@ -42,15 +46,54 @@ fun TransactionListScreen(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
     ) {
-        items(transactions) { transaction ->
-            TransactionItem(
-                transaction = transaction,
-                onLongClick = { onEdit(transaction) },
-                modifier = Modifier
-                    .combinedClickable(
-                        onClick = { /* 无操作 */ },
-                        onLongClick = { onEdit(transaction) }
+        items(transactions, key = { it.id }) { transaction ->
+            val dismissState = rememberDismissState(
+                confirmValueChange = { dismissValue ->
+                    if (dismissValue == DismissValue.DismissedToStart) {
+                        onDelete(transaction)
+                        true
+                    } else {
+                        false
+                    }
+                }
+            )
+
+            SwipeToDismiss(
+                state = dismissState,
+                directions = setOf(DismissDirection.EndToStart),
+                background = {
+                    val color = when (dismissState.dismissDirection) {
+                        DismissDirection.EndToStart -> MaterialTheme.colorScheme.error
+                        else -> Color.Transparent
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(color)
+                            .padding(horizontal = 24.dp),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
+                        if (dismissState.dismissDirection == DismissDirection.EndToStart) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "删除",
+                                tint = MaterialTheme.colorScheme.onError,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                },
+                dismissContent = {
+                    TransactionItem(
+                        transaction = transaction,
+                        onLongClick = { onEdit(transaction) },
+                        modifier = Modifier
+                            .combinedClickable(
+                                onClick = { /* 无操作 */ },
+                                onLongClick = { onEdit(transaction) }
+                            )
                     )
+                }
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
