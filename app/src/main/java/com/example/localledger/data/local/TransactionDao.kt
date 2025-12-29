@@ -1,4 +1,4 @@
-package com.example.localledger.data.local
+package com.example.localledger. data.local
 
 import androidx.room.*
 import com.example.localledger.data.model.TransactionEntity
