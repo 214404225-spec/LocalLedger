@@ -1,4 +1,4 @@
-package com.example.localledger. ui.screens
+package com.example.localledger.ui.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx. compose.foundation.ExperimentalFoundationApi
